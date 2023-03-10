@@ -355,7 +355,8 @@ var two_step_task = {
 				trial_duration: two_step_task.animation.length_ms,
 				on_finish: function() {
 					cancelAnimationFrame(two_step_task.animation.raf_id);
-				}
+				},
+				choices: 'NO_KEYS'
 			}
 			return(trial);
 		},
