@@ -47,15 +47,14 @@ var two_step_task = {
 		},
 		n_loaded: 0,
 		n_to_load: 9, // Will be set
-		load: function(on_update, on_finish) {
+		load: function(on_finish) {
 			var k;
 			for (k in two_step_task.images.filenames) {
 				var curr_img = new Image();
 				curr_img.onload = function() {
 					two_step_task.images.n_loaded++;
-					if (on_update) on_update();
 					if (two_step_task.images.n_loaded == two_step_task.images.n_to_load) {
-						if (on_finish) on_finish();
+						on_finish();
 					}
 				}
 				curr_img.src = two_step_task.images.filenames[k];
@@ -70,6 +69,21 @@ var two_step_task = {
 			width:	null,
 			height:	null
 		}
+	},
+	// ------------------------------------------
+	// ------------------------------------------
+	// Data -------------------------------------
+	// ------------------------------------------
+	// ------------------------------------------
+	data: {
+		// Information about the trial is recorded here and then transferred to jsPsych.data during a record_data trial
+		trial_n: null,
+		reward_probs: null,
+		stage_1_action: null,
+		stage_2: null,
+		transition: null,
+		stage_2_action: null,
+		reward: null
 	},
 	// ------------------------------------------
 	// ------------------------------------------
@@ -113,7 +127,7 @@ var two_step_task = {
 				if (p < 0.25) {
 					p = 0.5 - p;
 				}
-				reward_probs[k] = p;
+				probs[a] = p;
 			}
 		},
 		display_duration: 1000 // How long the reward outcome is displayed
@@ -144,14 +158,19 @@ var two_step_task = {
 				);
 			}
 		},
-		get_choice_idx(response) { // 0 for left, 1 for right
+		get_choice_idx(key) { // 0 for left, 1 for right
 			var choice_idx;
-			if (two_step_task.interaction.last_response == two_step_task.interaction.choice_keys[0]) {
+			if (key == two_step_task.interaction.choice_keys[0]) {
 				choice_idx = 0;
 			} else {
 				choice_idx = 1;
 			}
 			return(choice_idx);
+		},
+		get_choice_name(key) { // 1a/1b/2aa/2ab etc.
+			var choice_idx = two_step_task.interaction.get_choice_idx(key);
+			var choice_name = two_step_task.interaction.choice_names[choice_idx];
+			return(choice_name);
 		}
 	},
 	// ------------------------------------------
@@ -171,18 +190,7 @@ var two_step_task = {
 				common: '2b',
 				rare: '2a'
 			}
-		},
-		to_stage_2: function() {
-			// Which choice?
-			var choice_idx = two_step_task.interaction.get_choice_idx();
-			var choice = two_step_task.interaction.choice_names[choice_idx];
-			// Which transition?
-			var transition = Math.random() < two_step_task.transition.common_prob ? 'common' : 'rare';
-			// Which next state?
-			var next_state = two_step_task.transition.structure[choice][transition];
-			two_step_task.transition.curr_state = next_state;
-		},
-		last: null
+		}
 	},
 	// ------------------------------------------
 	// ------------------------------------------
@@ -205,6 +213,12 @@ var two_step_task = {
 		},
 		easing_function: function(ppn_t) {
 			return(1 - 1 / ( Math.exp(6*ppn_t) ) );
+		},
+		prepare: function(last_keypress) {
+			var choice_idx = two_step_task.interaction.get_choice_idx(last_keypress);
+			two_step_task.animation.source_coords = two_step_task.interaction.choice_coordinates[choice_idx];
+			var choice_name = two_step_task.interaction.get_choice_name(last_keypress);
+			two_step_task.animation.img = two_step_task.images.data[choice_name];
 		},
 		initiate_loop: function() {
 			var canv = two_step_task.animation.canv;
@@ -265,42 +279,30 @@ var two_step_task = {
 	// ------------------------------------------
 	// ------------------------------------------
 	trials: {
-		load_images: function() {
+		initialize_experiment: function() {
 			var trial = {
-				type: jsPsychHtmlKeyboardResponse,
-				stimulus: 'Loading... 0%',
-				on_start: function() {
-					two_step_task.images.load(
-						function() { // On update, draw
-							var pct_loaded = Math.round(100*two_step_task.images.n_loaded/two_step_task.images.n_to_load);
-							var display_el = document.getElementById('jspsych-html-keyboard-response-stimulus');
-							display_el.innerHTML = 'Loading... ' + pct_loaded + '%';
-						},
-						function() { // On end, continue experiment
-							jsPsych.finishTrial();
-						}
-					)
-				},
-				choices: 'NO_KEYS'
+				type: jsPsychCallFunction,
+				async: true,
+				func: function(on_finish) {
+					// Ensure images are loaded
+					if (two_step_task.images.n_loaded == 0) {
+						two_step_task.images.load(on_finish);
+					}
+					// Reset info
+					two_step_task.reward.initialize_probs();
+					two_step_task.data.trial_n = 0;
+				}
 			}
 			return(trial);
 		},
-		initialize_probs: function() {
+		initialize_trial: function() {
 			var trial = {
 				type: jsPsychCallFunction,
 				func: function() {
-					two_step_task.reward.initialize_probs();
-				}
-			}
-		},
-		initialize: function() {
-			var trial = {
-				type: jsPsychCallFunction,
-				func: function() {
-					// Set dimensions of canvases
+					// Set dimensions of canvas
 					var side_len = 0.9 * Math.min(window.innerHeight, window.innerWidth);
 					two_step_task.animation.canv_dims = [side_len, side_len];
-					// Set coordinates of images representing choices
+					// Set coordinates of images representing choices based on canvas dimensions
 					var ppn_dims = two_step_task.images.proportional_dims;
 					two_step_task.interaction.choice_coordinates = [
 						{
@@ -316,6 +318,13 @@ var two_step_task = {
 					for (k in ppn_dims) {
 						two_step_task.images.absolute_dims[k] = side_len * ppn_dims[k];
 					}
+					// Reset trial data
+					var trial_n = two_step_task.data.trial_n;
+					var k;
+					for (k in two_step_task.data) {
+						two_step_task.data[k] = null;
+					}
+					two_step_task.data.trial_n = trial_n + 1;
 				}
 			}
 			return(trial);
@@ -332,22 +341,39 @@ var two_step_task = {
 				},
 				choices: two_step_task.interaction.choice_keys,
 				on_finish: function(data) {
-					two_step_task.interaction.last_response = data.response; // Record for subsequent animation
+					// Record response
+					var choice_name = two_step_task.interaction.get_choice_name(data.response);
+					two_step_task.data.stage_1_action = choice_name;
+					// Set up animation
+					two_step_task.animation.prepare(data.response);
 				}
 			}
 			return(trial);
 		},
-		choice_animation: function() {
+		transition: function() {
+			var trial = {
+				type: jsPsychCallFunction,
+				func: function() {
+					// Determine transition
+					var choice_name = two_step_task.interaction.get_choice_name();
+					var transition = Math.random() < two_step_task.transition.common_prob ? 'common' : 'rare';
+					var stage_2 = two_step_task.transition.structure[choice_name][transition];
+					// Figure out next choices
+					two_step_task.interaction.choice_names = [
+						stage_2 + 'a',
+						stage_2 + 'b'
+					];
+					// Record transition
+					two_step_task.data.transition = transition;
+					two_step_task.data.stage_2 = stage_2;
+				}
+			}
+			return(trial);
+		},
+		animation: function() {
 			var trial = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
-				on_start: function() {
-					// Which key was last pressed? This will determine which image to animate and from where
-					var choice_idx = two_step_task.interaction.get_choice_idx();
-					var choice_name = two_step_task.interaction.choice_names[choice_idx];
-					two_step_task.animation.img = two_step_task.images.data[choice_name];
-					two_step_task.animation.source_coords = two_step_task.interaction.choice_coordinates[choice_idx];
-				},
 				stimulus: function(canv) {
 					two_step_task.animation.canv = canv;
 					two_step_task.animation.initiate_loop();
@@ -364,14 +390,6 @@ var two_step_task = {
 			var trial = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
-				on_start: function(trial) {
-					// Update current state
-					two_step_task.transition.to_stage_2();
-					two_step_task.interaction.choice_names = [
-						two_step_task.transition.curr_state + 'a',
-						two_step_task.transition.curr_state + 'b'
-					]; // [2aa, 2ab] or [2ba, 2bb]
-				},
 				stimulus: function(canv) {
 					// Draw last-animated image at the top of the screen
 					two_step_task.animation.draw_final_frame(canv);
@@ -380,12 +398,16 @@ var two_step_task = {
 				},
 				choices: two_step_task.interaction.choice_keys,
 				on_finish: function(data) {
-					two_step_task.interaction.last_response = data.response; // Record for subsequent animation
+					// Record response
+					var choice_name = two_step_task.interaction.get_choice_name(data.response);
+					two_step_task.data.stage_2_action = choice_name;
+					// Set up animation
+					two_step_task.animation.prepare(data.response);
 				}
 			}
 			return(trial);
 		},
-		show_reward: function() {
+		reward: function() {
 			var trial = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
@@ -393,14 +415,16 @@ var two_step_task = {
 					two_step_task.animation.draw_final_frame(canv);
 					var choice_idx = two_step_task.interaction.get_choice_idx();
 					var choice = two_step_task.interaction.choice_names[choice_idx];
+					var p_reward = two_step_task.reward.probs[choice]
 					// Is a reward received?
+					var reward = Math.random() < p_reward;
+					// Draw image based on reward
 					var img;
-					if (Math.random() < two_step_task.reward.probs[choice]) {
+					if (reward) {
 						img = two_step_task.images.data['reward'];
 					} else {
 						img = two_step_task.images.data['no_reward'];
 					}
-					// Draw image based on reward
 					var ctx = canv.getContext('2d');
 					ctx.drawImage(
 						img,
@@ -409,22 +433,61 @@ var two_step_task = {
 						two_step_task.images.absolute_dims.width,
 						two_step_task.images.absolute_dims.height
 					);
+					// Record data
+					two_step_task.data.reward = reward;
+					two_step_task.data.reward_probs = {};
+					var k;
+					for (k in two_step_task.reward.probs) {
+						two_step_task.data.reward_probs[k] = two_step_task.reward.probs[k];
+					}
 				},
 				choices: 'NO_KEYS',
-				trial_duration: two_step_task.reward.display_duration
+				trial_duration: two_step_task.reward.display_duration,
+				on_finish: function(data) {
+					data
+				}
 			}
 			return(trial);
 		},
-		timeline: function() {
-			var timeline = [
-				two_step_task.trials.initialize(),
-				two_step_task.trials.stage_1(),
-				two_step_task.trials.choice_animation(),
-				two_step_task.trials.stage_2(),
-				two_step_task.trials.choice_animation(),
-				two_step_task.trials.show_reward()
-			];
-			return(timeline);
+		update_reward_probs: function() {
+			var trial = {
+				type: jsPsychCallFunction,
+				func: function() {
+					two_step_task.reward.update_probs();
+				}
+			}
+			return(trial);
+		},
+		record_data: function() {
+			var trial = {
+				type: jsPsychCallFunction,
+				func: function() {
+					// Create copy of data
+					var two_step_task_data = {};
+					var k;
+					for (k in two_step_task.data) {
+						two_step_task_data[k] = two_step_task.data[k];
+					}
+					jsPsych.getCurrentTrial().data = {two_step_task_data: two_step_task_data};
+				}
+			}
+			return(trial);
+		},
+		single_trial: function() {
+			var trial = {
+				timeline: [
+					two_step_task.trials.initialize_trial(),
+					two_step_task.trials.stage_1(),
+					two_step_task.trials.transition(),
+					two_step_task.trials.animation(),
+					two_step_task.trials.stage_2(),
+					two_step_task.trials.animation(),
+					two_step_task.trials.reward(),
+					two_step_task.trials.update_reward_probs(),
+					two_step_task.trials.record_data()
+				]
+			}
+			return(trial);
 		}
 	}
 }

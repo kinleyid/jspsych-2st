@@ -12,15 +12,16 @@
   </head>
   <body></body>
   <script>
-    var jsPsych = initJsPsych();
+    var jsPsych = initJsPsych({
+      on_finish: function() {
+        jsPsych.data.displayData();
+      },
+    });
 
     two_step_task.images.set_files_to_default();
-    two_step_task.reward.initialize_probs();
-    var trials = {
-      timeline: two_step_task.trials.timeline(),
-      repetitions: 10
-    }
+    var trials = two_step_task.trials.single_trial();
+    trials.repetitions = 2;
 
-    jsPsych.run([two_step_task.trials.load_images(), trials]);
+    jsPsych.run([two_step_task.trials.initialize_experiment(), trials]);
   </script>
 </html>
