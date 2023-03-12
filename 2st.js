@@ -2,6 +2,26 @@
 var two_step_task = {
 	// ------------------------------------------
 	// ------------------------------------------
+	// Random utilities -------------------------
+	// ------------------------------------------
+	// ------------------------------------------
+	utils: {
+		deepcopy: function(x) {
+			var y;
+			if (typeof(x) == 'object' && x != null) {
+				y = {};
+				var k;
+				for (k in x) {
+					y[k] = two_step_task.utils.deepcopy(x[k])
+				}
+			} else {
+				y = x;
+			}
+			return(y);
+		}
+	},
+	// ------------------------------------------
+	// ------------------------------------------
 	// Images -----------------------------------
 	// ------------------------------------------
 	// ------------------------------------------
@@ -463,11 +483,7 @@ var two_step_task = {
 				type: jsPsychCallFunction,
 				func: function() {
 					// Create copy of data
-					var two_step_task_data = {};
-					var k;
-					for (k in two_step_task.data) {
-						two_step_task_data[k] = two_step_task.data[k];
-					}
+					var two_step_task_data = two_step_task.utils.deepcopy(two_step_task.data);
 					jsPsych.getCurrentTrial().data = {two_step_task_data: two_step_task_data};
 				}
 			}
