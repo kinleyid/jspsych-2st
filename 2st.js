@@ -27,29 +27,29 @@ var two_step_task = {
 	// ------------------------------------------
 	images: {
 		filenames: {
-			'1a':			null,
-			'1b':			null,
-			'2aa':			null,
-			'2ab':			null,
-			'2ba':			null,
-			'2bb':			null,
+			'1A':			null,
+			'1B':			null,
+			'2AA':			null,
+			'2AB':			null,
+			'2BA':			null,
+			'2BB':			null,
 			'reward':		null,
 			'no_reward':	null,
 			'timeout':		null
 		},
 		data: {
-			'1a':			null,
-			'1b':			null,
-			'2aa':			null,
-			'2ab':			null,
-			'2ba':			null,
-			'2bb':			null,
+			'1A':			null,
+			'1B':			null,
+			'2AA':			null,
+			'2AB':			null,
+			'2BA':			null,
+			'2BB':			null,
 			'reward':		null,
 			'no_reward':	null,
 			'timeout':		null
 		},
 		set_files_to_default: function() {
-			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.3.0/img/';
+			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.4.0/img/';
 			var img = two_step_task.images.filenames;
 			var k;
 			for (k in img) {
