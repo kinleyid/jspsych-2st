@@ -49,7 +49,7 @@ var two_step_task = {
 			'timeout':		null
 		},
 		set_files_to_default: function() {
-			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.4.0/img/';
+			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.5.0/img/';
 			var img = two_step_task.images.filenames;
 			var k;
 			for (k in img) {
@@ -160,7 +160,7 @@ var two_step_task = {
 	interaction: {
 		choice_keys: ['z', 'm'], // Available keys: [left, right]
 		last_response: null, // Container to persist beyond a single trial
-		choice_names: [], // Names of choices, e.g., ['1a', '1b']
+		choice_names: [], // Names of choices, e.g., ['1A', '1B']
 		choice_coordinates: [], // Coordinates on canvas of choices
 		draw_choices: function(canv) {
 			var ctx = canv.getContext('2d');
@@ -187,7 +187,7 @@ var two_step_task = {
 			}
 			return(choice_idx);
 		},
-		get_choice_name(key) { // 1a/1b/2aa/2ab etc.
+		get_choice_name(key) { // 1A/1B/2AA/2BB etc.
 			var choice_idx = two_step_task.interaction.get_choice_idx(key);
 			var choice_name = two_step_task.interaction.choice_names[choice_idx];
 			return(choice_name);
@@ -202,13 +202,13 @@ var two_step_task = {
 		curr_state: null,
 		common_prob: 0.7,
 		structure: {
-			'1a': {
-				common: '2a',
-				rare: '2b'
+			'1A': {
+				common: '2A',
+				rare: '2B'
 			},
-			'1b': {
-				common: '2b',
-				rare: '2a'
+			'1B': {
+				common: '2B',
+				rare: '2A'
 			}
 		}
 	},
@@ -354,7 +354,7 @@ var two_step_task = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
 				on_start: function(trial) {
-					two_step_task.interaction.choice_names = ['1a', '1b'];
+					two_step_task.interaction.choice_names = ['1A', '1B'];
 				},
 				stimulus: function(canv) {
 					two_step_task.interaction.draw_choices(canv);
@@ -380,8 +380,8 @@ var two_step_task = {
 					var stage_2 = two_step_task.transition.structure[choice_name][transition];
 					// Figure out next choices
 					two_step_task.interaction.choice_names = [
-						stage_2 + 'a',
-						stage_2 + 'b'
+						stage_2 + 'A',
+						stage_2 + 'B'
 					];
 					// Record transition
 					two_step_task.data.transition = transition;
