@@ -306,13 +306,15 @@ var two_step_task = {
 				type: jsPsychCallFunction,
 				async: true,
 				func: function(on_finish) {
-					// Ensure images are loaded
-					if (two_step_task.images.n_loaded == 0) {
-						two_step_task.images.load(on_finish);
-					}
 					// Reset info
 					two_step_task.reward.initialize_probs();
 					two_step_task.data.trial_n = 0;
+					// Ensure images are loaded
+					if (two_step_task.images.n_loaded == 0) {
+						two_step_task.images.load(on_finish);
+					} else {
+						on_finish();
+					}
 				}
 			}
 			return(trial);
@@ -527,6 +529,7 @@ var two_step_task = {
 								two_step_task.images.absolute_dims.height
 							);
 						},
+						choices: 'NO_KEYS',
 						trial_duration: two_step_task.interaction.timeout_display_ms
 					}
 				],
