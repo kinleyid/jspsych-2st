@@ -49,7 +49,7 @@ var two_step_task = {
 			'timeout':		null
 		},
 		set_files_to_default: function() {
-			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.5.0/img/';
+			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.6.0/img/';
 			var img = two_step_task.images.filenames;
 			var k;
 			for (k in img) {
@@ -99,11 +99,12 @@ var two_step_task = {
 		// Information about the trial is recorded here and then transferred to jsPsych.data during a record_data trial
 		trial_n: null,
 		reward_probs: null,
-		stage_1_action: null,
-		stage_2: null,
+		step_1_action: null,
+		step_2: null,
 		transition: null,
-		stage_2_action: null,
-		reward: null
+		step_2_action: null,
+		reward: null,
+		timeout: false
 	},
 	// ------------------------------------------
 	// ------------------------------------------
@@ -112,10 +113,10 @@ var two_step_task = {
 	// ------------------------------------------
 	reward: {
 		probs: { // Probabilities
-			'2aa': null,
-			'2ab': null,
-			'2ba': null,
-			'2bb': null
+			'2AA': null,
+			'2AB': null,
+			'2BA': null,
+			'2BB': null
 		},
 		prob_lims: [0.25, 0.75], // Limits to probabilities
 		initialize_probs: function() {
@@ -191,7 +192,9 @@ var two_step_task = {
 			var choice_idx = two_step_task.interaction.get_choice_idx(key);
 			var choice_name = two_step_task.interaction.choice_names[choice_idx];
 			return(choice_name);
-		}
+		},
+		timeout_ms: 2000, // How long before a trial times out?
+		timeout_display_ms: 1000, // How long to show the timeout screen if a trial does time out?
 	},
 	// ------------------------------------------
 	// ------------------------------------------
@@ -199,7 +202,6 @@ var two_step_task = {
 	// ------------------------------------------
 	// ------------------------------------------
 	transition: {
-		curr_state: null,
 		common_prob: 0.7,
 		structure: {
 			'1A': {
@@ -319,6 +321,8 @@ var two_step_task = {
 			var trial = {
 				type: jsPsychCallFunction,
 				func: function() {
+					// Reset subtrial history
+					two_step_task.interaction.subtrial_history = [];
 					// Set dimensions of canvas
 					var side_len = 0.9 * Math.min(window.innerHeight, window.innerWidth);
 					two_step_task.animation.canv_dims = [side_len, side_len];
@@ -340,16 +344,19 @@ var two_step_task = {
 					}
 					// Reset trial data
 					var trial_n = two_step_task.data.trial_n;
+					// first reset all to null...
 					var k;
 					for (k in two_step_task.data) {
 						two_step_task.data[k] = null;
 					}
+					// ...then set values that should not be reset to null
 					two_step_task.data.trial_n = trial_n + 1;
+					two_step_task.data.timeout = false;
 				}
 			}
 			return(trial);
 		},
-		stage_1: function() {
+		step_1: function() {
 			var trial = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
@@ -360,12 +367,17 @@ var two_step_task = {
 					two_step_task.interaction.draw_choices(canv);
 				},
 				choices: two_step_task.interaction.choice_keys,
+				trial_duration: function() {return(two_step_task.interaction.timeout_ms)},
 				on_finish: function(data) {
-					// Record response
-					var choice_name = two_step_task.interaction.get_choice_name(data.response);
-					two_step_task.data.stage_1_action = choice_name;
-					// Set up animation
-					two_step_task.animation.prepare(data.response);
+					if (data.response) {
+						// Record response
+						var choice_name = two_step_task.interaction.get_choice_name(data.response);
+						two_step_task.data.step_1_action = choice_name;
+						// Set up animation
+						two_step_task.animation.prepare(data.response);
+					} else {
+						two_step_task.data.timeout = true;
+					}
 				}
 			}
 			return(trial);
@@ -377,15 +389,10 @@ var two_step_task = {
 					// Determine transition
 					var choice_name = two_step_task.interaction.get_choice_name();
 					var transition = Math.random() < two_step_task.transition.common_prob ? 'common' : 'rare';
-					var stage_2 = two_step_task.transition.structure[choice_name][transition];
-					// Figure out next choices
-					two_step_task.interaction.choice_names = [
-						stage_2 + 'A',
-						stage_2 + 'B'
-					];
+					var step_2 = two_step_task.transition.structure[choice_name][transition];
 					// Record transition
 					two_step_task.data.transition = transition;
-					two_step_task.data.stage_2 = stage_2;
+					two_step_task.data.step_2 = step_2;
 				}
 			}
 			return(trial);
@@ -406,23 +413,34 @@ var two_step_task = {
 			}
 			return(trial);
 		},
-		stage_2: function() {
+		step_2: function() {
 			var trial = {
 				type: jsPsychCanvasKeyboardResponse,
 				canvas_size: function() {return(two_step_task.animation.canv_dims)},
 				stimulus: function(canv) {
-					// Draw last-animated image at the top of the screen
-					two_step_task.animation.draw_final_frame(canv);
-					// Draw choices
+					// Draw last-animated image, if any, at the top of the screen
+					if (two_step_task.data.step_1_action) {
+						two_step_task.animation.draw_final_frame(canv);
+					}
+					// Set and draw choices
+					two_step_task.interaction.choice_names = [
+						two_step_task.data.step_2 + 'A',
+						two_step_task.data.step_2 + 'B',
+					];
 					two_step_task.interaction.draw_choices(canv);
 				},
 				choices: two_step_task.interaction.choice_keys,
+				trial_duration: function() {return(two_step_task.interaction.timeout_ms)},
 				on_finish: function(data) {
-					// Record response
-					var choice_name = two_step_task.interaction.get_choice_name(data.response);
-					two_step_task.data.stage_2_action = choice_name;
-					// Set up animation
-					two_step_task.animation.prepare(data.response);
+					if (data.response) {
+						// Record response
+						var choice_name = two_step_task.interaction.get_choice_name(data.response);
+						two_step_task.data.step_2_action = choice_name;
+						// Set up animation
+						two_step_task.animation.prepare(data.response);
+					} else {
+						two_step_task.data.timeout = true;
+					}
 				}
 			}
 			return(trial);
@@ -469,6 +487,55 @@ var two_step_task = {
 			}
 			return(trial);
 		},
+		subtrials_with_response_dependence: function() {
+			// Add a conditional function so that the appropriate sub-trials are response-contingent
+			var response_dependents = [
+				two_step_task.trials.step_1(),
+				two_step_task.trials.transition(),
+				two_step_task.trials.animation(),
+				two_step_task.trials.step_2(),
+				two_step_task.trials.animation(),
+				two_step_task.trials.reward(),
+			];
+			var i;
+			for (i = 0; i < response_dependents.length; i++) {
+				response_dependents[i] = {
+					timeline: [response_dependents[i]],
+					conditional_function: function() {
+						return(!two_step_task.data.timeout);
+					}
+				}
+			}
+			// Put them all in a single trial
+			var trial = {
+				timeline: response_dependents
+			}
+			return(trial)
+		},
+		show_timeout: function() {
+			var trial = {
+				timeline: [
+					{
+						type: jsPsychCanvasKeyboardResponse,
+						stimulus: function(canv) {
+							var ctx = canv.getContext('2d');
+							ctx.drawImage(
+								two_step_task.images.data['timeout'],
+								canv.width*(0.5 - two_step_task.images.proportional_dims.width/2),
+								canv.height*(0.5 - two_step_task.images.proportional_dims.height/2),
+								two_step_task.images.absolute_dims.width,
+								two_step_task.images.absolute_dims.height
+							);
+						},
+						trial_duration: two_step_task.interaction.timeout_display_ms
+					}
+				],
+				conditional_function: function() {
+					return(two_step_task.data.timeout);
+				}
+			}
+			return(trial);
+		},
 		update_reward_probs: function() {
 			var trial = {
 				type: jsPsychCallFunction,
@@ -493,17 +560,123 @@ var two_step_task = {
 			var trial = {
 				timeline: [
 					two_step_task.trials.initialize_trial(),
-					two_step_task.trials.stage_1(),
-					two_step_task.trials.transition(),
-					two_step_task.trials.animation(),
-					two_step_task.trials.stage_2(),
-					two_step_task.trials.animation(),
-					two_step_task.trials.reward(),
+					two_step_task.trials.subtrials_with_response_dependence(),
+					two_step_task.trials.show_timeout(),
 					two_step_task.trials.update_reward_probs(),
 					two_step_task.trials.record_data()
 				]
 			}
 			return(trial);
+		},
+		example_instructions: function() {
+			var instr_1 = {
+				type: jsPsychInstructions,
+				pages: [
+					'In this game, you are opening boxes to find as many coins as you can.',
+					'There is a red pair of boxes and a blue pair of boxes. Each individual box has a certain chance of containing a coin. For example, one box might have a 50% chance while another might have a 60% chance. The aim is to find a box with a high chance of containing a coin and choose it.',
+					'On the next screen, you can try choosing boxes to try to find coins. Use the "z" key to select the box on the left and the "m" key to select the box on the right. See if you can figure out which boxes have a high chance of giving you a coin.',
+					'Click "Next" to begin the practice.'
+				],
+				show_clickable_nav: true
+			}
+			
+			var initialize_step_2_practice = {
+				type: jsPsychCallFunction,
+				func: function() {
+					two_step_task.reward.probs = { // Deterministic for practice--they will be randomized later
+						'2AA': 0.25,
+						'2AB': 0.5,
+						'2BA': 0.5,
+						'2BB': 0.75
+					};
+					two_step_task.interaction.timeout_ms = undefined;
+				}
+			}
+			
+			var step_2_practice = {
+				timeline: [
+					two_step_task.trials.initialize_trial(),
+					{ // Randomize which second step is shown
+						type: jsPsychCallFunction,
+						func: function() {two_step_task.data.step_2 = Math.random() < 0.5 ? '2A' : '2B'}
+					},
+					two_step_task.trials.step_2(),
+					two_step_task.trials.animation(),
+					two_step_task.trials.reward()
+				],
+				repetitions: 10
+			}
+			
+			var instr_2 = {
+				type: jsPsychInstructions,
+				pages: [
+					'You may have noticed that this box had the lowest chance of containing a coin...' +
+						'<br><br>' +
+						'<img src="' + two_step_task.images.filenames['2AA'] + '" height=100</img>',
+					'...these two boxes had the same chance of containing a coin...' +
+						'<br><br>' +
+						'<img src="' + two_step_task.images.filenames['2AB'] + '" height=100</img>' +
+						'<img src="' + two_step_task.images.filenames['2BA'] + '" height=100</img>',
+					'...and this one had the highest chance.' +
+						'<br><br>' +
+						'<img src="' + two_step_task.images.filenames['2BB'] + '" height=100</img>',
+					"Note that your chance of finding a coin in a box depends only on its symbol, not which side of the screen it's on.",
+					"In fact, there are <i>no</i> special patterns to when you win a coin. When you pick a box with a 60% chance of containing a coin, the computer simply gives you a 60% chance of winning a coin that round. The chance has nothing to do with any of the other boxes or your past wins or losses.",
+					"This was just practice. The real game will use different boxes with different probabilities of containing coins, but the rules will stay the same.",
+					"Also, in the real game, each box's chance of containing a coin will change slowly over time. A box that starts out better can turn worse later, or a worse one can turn better, so finding the current best box requires continual concentration.",
+					"How each box changes is completely random and independent of each other box's probability of containing a coin. There are no special patterns in how the probabilities change.",
+					"Because the probabilities change slowly, they will probably stay similar in the short term but probably change in the long term.",
+					"While the red and blue boxes will potentially contain coins, there are also two green boxes that will contain either the red pair or the blue pair of boxes:" +
+						'<br><br>' +
+						'<img src="' + two_step_task.images.filenames['1A'] + '" height=100</img>' +
+						'<img src="' + two_step_task.images.filenames['1B'] + '" height=100</img>',
+					"One green box will usually (but not always) give you the red boxes, and the other green box will usually (but not always) give you the blue boxes. After choosing a green box, you choose between the red or blue boxes it gives you like before.",
+					"Unlike the chances of finding coins in the red or blue boxes, the chance that a green box will lead to a particular pair of boxes will not change.",
+					"For example, if a green box has a 70% chance of giving you the red boxes and a 30% chance of giving you the blue boxes, these probabilities will always be the same.",
+					'On the next screen, you can try a practice version of the full game. Use the "z" key to select the box on the left and the "m" key to select the box on the right. First choose a green box, then a red or blue box.',
+					'If you take too long to make a choice, the trial will end. In this case, you will see a red X on the screen...' +
+						'<br>' +
+						'<img src="' + two_step_task.images.filenames['timeout'] + '" height=100</img>' +
+						'<br>' +
+						'...and a new trial will start.' + " Don't" + ' feel rushed, but please try to enter a choice on every trial. Click "Next" to begin.'
+				],
+				show_clickable_nav: true
+			}
+			
+			var initialize_full_task_practice = {
+				type: jsPsychCallFunction,
+				func: function() {
+					two_step_task.interaction.timeout_ms = 2000;
+				}
+			}
+			
+			var full_task_practice = {
+				timeline: [two_step_task.trials.single_trial()],
+				repetitions: 10
+			}
+			
+			var final_instr = {
+				type: jsPsychInstructions,
+				pages: [
+					'Note that when you choose a red or blue box, your chance of finding a coin depends only on its symbol, not which green box you chose to get there.',
+					'The choice you make between the green boxes is still important because it can help you get whichever pair of boxes are most likely to contain coins.',
+					'The practice round is now over. The real game will take about 20 minutes, with breaks every 5 minutes. The real game will begin when you click "Next".'
+				],
+				show_clickable_nav: true
+			}
+
+			var instructions = {
+				timeline: [
+					instr_1,
+					initialize_step_2_practice,
+					step_2_practice,
+					instr_2,
+					initialize_full_task_practice,
+					full_task_practice,
+					final_instr
+				]
+			}
+			return(instructions);
 		}
 	}
 }
