@@ -1,6 +1,6 @@
 # A jsPsych implementation of the two-step task of Daw et al. (2011)
 
-This task is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. An example can be found (https://kinleyid.github.io/rsrch/jspsych-2st/example.html)[here]
+This task is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. An example can be found [here](https://kinleyid.github.io/rsrch/jspsych-2st/example.html).
 
 ## Quick setup
 
