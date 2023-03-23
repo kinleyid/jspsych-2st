@@ -1,9 +1,11 @@
 
+require(rjson)
+
 all_data <- read.csv('data.csv')
 # Get only trials where two step task data is recorded
 trial_data <- subset(all_data, two_step_task_data != '')
 # Parse JSON to list of lists
-parsed_json <- lapply(trial_data$two_step_task_data, rjson::fromJSON)
+parsed_json <- lapply(trial_data$two_step_task_data, fromJSON)
 # Convert to list of data frames
 df_list <- lapply(parsed_json, data.frame)
 # Combine data frames
