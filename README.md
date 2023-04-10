@@ -2,6 +2,12 @@
 
 This task is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. An example can be found [here](https://kinleyid.github.io/rsrch/jspsych-2st/example.html).
 
+## Contents
+
+1. [Quick setup](#quick-setup)
+2. [Data produced](#data-produced)
+3. [Timing parameters](#timing-parameters)
+
 ## Quick setup
 
 To use all of the default settings as described in Daw et al. (2011), first source the script "2st.js".
@@ -43,3 +49,14 @@ Finally, `single_trial()` is a single trial during which the participant complet
 ## Data produced
 
 After a trial (including both steps of the task) is complete, the information about that trial is stored in an attribute called `two_step_task_info` (an example of this can be seen [here](example-data/data.csv)). An example R script to parse this data can be found [here](example-data/extract-data.R).
+
+## Timing parameters
+
+Various aspects of the timing of trials are controlled by a set of parameters. The following table describes them:
+
+| Description | Parameter | Default value (in milliseconds) |
+|------|------|------|
+| Length of time allowed for a response, after which a trial "times out" | `two_step_task.interaction.timeout_ms` | 2000 |
+| Duration of feedback indicating a trial has "timed out" | `two_step_task.interaction.timeout_display_ms` | 1000 |
+| Length of animation in which icons representing task states move from one side of the screen to the top middle | `two_step_task.animation.length_ms` | 500 |
+| Duration of feedback indicating reward or lack thereof | `two_step_task.reward.display_ms` | 1000 |
