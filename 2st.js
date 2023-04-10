@@ -155,7 +155,7 @@ var two_step_task = {
 				probs[a] = p;
 			}
 		},
-		display_duration: 1000 // How long the reward outcome is displayed
+		display_ms: 1000 // How long the reward outcome is displayed
 	},
 	// ------------------------------------------
 	// ------------------------------------------
@@ -503,7 +503,7 @@ var two_step_task = {
 					);
 				},
 				choices: 'NO_KEYS',
-				trial_duration: two_step_task.reward.display_duration
+				trial_duration: two_step_task.reward.display_ms
 			}
 			return(trial);
 		},
@@ -610,6 +610,8 @@ var two_step_task = {
 						'2BA': 0.5,
 						'2BB': 0.75
 					};
+					// Time limits will be temporarily disabled by setting the timing parameter to undefined; It will be reset later, so store it in a temporary variable in the meantime
+					two_step_task.interaction.timeout_ms_tmp = two_step_task.interaction.timeout_ms;
 					two_step_task.interaction.timeout_ms = undefined;
 				}
 			}
@@ -667,7 +669,7 @@ var two_step_task = {
 			var initialize_full_task_practice = {
 				type: jsPsychCallFunction,
 				func: function() {
-					two_step_task.interaction.timeout_ms = 2000;
+					two_step_task.interaction.timeout_ms = two_step_task.interaction.timeout_ms_tmp;
 				}
 			}
 			
