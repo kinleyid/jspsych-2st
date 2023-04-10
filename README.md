@@ -1,12 +1,13 @@
 # A jsPsych implementation of the two-step task of Daw et al. (2011)
 
-This task is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. An example can be found [here](https://kinleyid.github.io/rsrch/jspsych-2st/example.html).
+This task (also known as the two-stage task) is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. The code here allows you to easily integrate this task into your online study. To see how the trials look, click [here](https://kinleyid.github.io/rsrch/jspsych-2st/short-example.html). A full example with detailed instructions for participants can be found [here](https://kinleyid.github.io/rsrch/jspsych-2st/full-example.html).
 
-## Contents
-
+**Contents of this documentation**:
 1. [Quick setup](#quick-setup)
 2. [Data produced](#data-produced)
 3. [Timing parameters](#timing-parameters)
+4. [Creating instruction for participants](#creating-instructions-for-participants)
+---
 
 ## Quick setup
 
@@ -60,3 +61,7 @@ Various aspects of the timing of trials are controlled by a set of parameters. T
 | Duration of feedback indicating a trial has "timed out" | `two_step_task.interaction.timeout_display_ms` | 1000 |
 | Length of animation in which icons representing task states move from one side of the screen to the top middle | `two_step_task.animation.length_ms` | 500 |
 | Duration of feedback indicating reward or lack thereof | `two_step_task.reward.display_ms` | 1000 |
+
+## Creating instructions for participants
+
+**under construction**
