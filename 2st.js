@@ -220,8 +220,9 @@ var two_step_task = {
 		randomize: function() {
 			var T = two_step_task.transition.structure;
 			var k, tmp;
-			for (k in T) {
-				if (Math.random() < 0.5) {
+			if (Math.random() < 0.5) {
+				// Switch common and rare
+				for (k in T) {
 					tmp = T[k].common;
 					T[k].common = T[k].rare;
 					T[k].rare = tmp;
@@ -338,8 +339,6 @@ var two_step_task = {
 			var trial = {
 				type: jsPsychCallFunction,
 				func: function() {
-					// Reset subtrial history
-					two_step_task.interaction.subtrial_history = [];
 					// Set dimensions of canvas
 					var side_len = 0.9 * Math.min(window.innerHeight, window.innerWidth);
 					two_step_task.animation.canv_dims = [side_len, side_len];
