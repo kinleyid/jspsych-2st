@@ -600,6 +600,7 @@ var two_step_task = {
 				show_clickable_nav: true
 			}
 			
+			var timeout_ms_tmp;
 			var initialize_step_2_practice = {
 				type: jsPsychCallFunction,
 				func: function() {
@@ -610,7 +611,7 @@ var two_step_task = {
 						'2BB': 0.75
 					};
 					// Time limits will be temporarily disabled by setting the timing parameter to undefined; It will be reset later, so store it in a temporary variable in the meantime
-					two_step_task.interaction.timeout_ms_tmp = two_step_task.interaction.timeout_ms;
+					timeout_ms_tmp = two_step_task.interaction.timeout_ms;
 					two_step_task.interaction.timeout_ms = undefined;
 				}
 			}
@@ -618,7 +619,7 @@ var two_step_task = {
 			var step_2_practice = {
 				timeline: [
 					two_step_task.trials.initialize_trial(),
-					{ // Randomize which second step is shown
+					{ // Randomize which second step state is shown
 						type: jsPsychCallFunction,
 						func: function() {two_step_task.data.step_2 = Math.random() < 0.5 ? '2A' : '2B'}
 					},
@@ -668,7 +669,7 @@ var two_step_task = {
 			var initialize_full_task_practice = {
 				type: jsPsychCallFunction,
 				func: function() {
-					two_step_task.interaction.timeout_ms = two_step_task.interaction.timeout_ms_tmp;
+					two_step_task.interaction.timeout_ms = timeout_ms_tmp;
 				}
 			}
 			
