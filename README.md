@@ -6,7 +6,7 @@ This task (also known as the two-stage task) is meant to measure the contributio
 1. [Quick setup](#quick-setup)
 2. [Creating trials](#creating-trials)
 3. [Data produced](#data-produced)
-4. [Timing parameters](#timing-parameters)
+4. [Parameters](#parameters)
 ---
 
 ## Quick setup
@@ -79,7 +79,9 @@ After a trial (including both steps of the task) is complete, the information ab
 | `reward` | Specifies whether a reward was received (Boolean)
 | `timeout` | Specifies whether the participant took to long to make a response, thus ending the trial early (Boolean) |
 
-## Timing parameters
+## Parameters
+
+### Timing
 
 Various aspects of the timing of trials are controlled by the following set of parameters:
 
@@ -89,3 +91,23 @@ Various aspects of the timing of trials are controlled by the following set of p
 | `two_step_task.interaction.timeout_display_ms` | Duration of feedback indicating a trial has "timed out" | 1000 |
 | `two_step_task.animation.length_ms` | Length of animation in which icons representing actions move from one side of the screen to the top middle | 500 |
 | `two_step_task.reward.display_ms` | Duration of feedback indicating reward or lack thereof | 1000 |
+
+### Keyboard input
+
+The parameter `two_step_task.interaction.choice_keys` specifies which keys are available to participants to make their responses. It has a default value of `['z', 'm']`.
+
+### Images
+
+Image filenames are attached to a set of attributes of `two_step_task.images.filenames`. The paths to the default images, as shown below, are set using `two_step_task.images.set_files_to_default`.
+
+| Image | Description | Default |
+|------|------|------|
+| `two_step_task.images.filenames.1A` | Image associated with action 1A | ![img/1A.svg](img/1A.svg) |
+| `two_step_task.images.filenames.1B` | Image associated with action 1B | ![img/1B.svg](img/1B.svg) |
+| `two_step_task.images.filenames.2AA` | Image associated with action 2AA | ![img/2AA.svg](img/2AA.svg) |
+| `two_step_task.images.filenames.2AB` | Image associated with action 2AB | ![img/2AB.svg](img/2AB.svg) |
+| `two_step_task.images.filenames.2BA` | Image associated with action 2BA | ![img/2BA.svg](img/2BA.svg) |
+| `two_step_task.images.filenames.2BB` | Image associated with action 2BB | ![img/2BB.svg](img/2BB.svg) |
+| `two_step_task.images.filenames.reward` | Image shown when a reward is received | ![img/reward.svg](img/reward.svg) |
+| `two_step_task.images.filenames.no_reward` | Image shown when a reward is not received | ![img/no_reward.svg](img/no_reward.svg) |
+| `two_step_task.images.filenames.timeout` | Image shown when a participant takes too long to make a response | ![img/timeout.svg](img/timeout.svg) |
