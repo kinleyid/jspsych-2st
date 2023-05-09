@@ -2,7 +2,7 @@
 
 This task (also known as the two-stage task) is meant to measure the contribution of model-based and model-free reinforcement learning strategies to human decision making. The code here allows you to easily integrate this task into your online study. To see how the trials look, click [here](https://kinleyid.github.io/rsrch/jspsych-2st/short-example.html). A full example with detailed instructions for participants can be found [here](https://kinleyid.github.io/rsrch/jspsych-2st/full-example.html).
 
-## Contents of this overview:
+## Contents of this documentation:
 1. [Quick setup](#quick-setup)
 2. [Creating trials](#creating-trials)
 3. [Data produced](#data-produced)
@@ -12,26 +12,31 @@ This task (also known as the two-stage task) is meant to measure the contributio
 
 ## Quick setup
 
-First, source the script "2st.js":
+First, source the script "2st.js" along with the required jsPsych plugins:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.6.0/2st.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v1.0.0/2st.js"></script>
+<script src="https://unpkg.com/@jspsych/plugin-call-function"></script>
+<script src="https://unpkg.com/@jspsych/plugin-canvas-keyboard-response"></script>
+<script src="https://unpkg.com/@jspsych/plugin-instructions"></script>
 ```
+
+(Note that this code is currently compatible with jsPsych 7+. If you need support for legacy versions of jsPsych, please contact me at kinleyid@mcmaseter.ca)
 
 Then, a minimal script to run the two-step task with the default parameters as described in [Daw et al. (2011)](https://doi.org/10.1016/j.neuron.2011.02.027) is as follows:
 
 ```javascript
 var jsPsych = initJsPsych();
-two_step_task.default_setup();
 var timeline = [
   { // Preload images
     type: jsPsychPreload,
     images: two_step_task.images.list_filenames()
   },
+  // Initialize experiment
   two_step_task.trials.initialize_experiment(),
   // Run interactive instructions
-  two_step_task.trials.example_instructions(),
-  // Reset reward probabilities:
+  two_step_task.trials.interactive_instructions(),
+  // Reset reward probabilities
   two_step_task.trials.initialize_experiment(),
   { // Full experiment, 100 trials
     timeline: [two_step_task.trials.single_trial()],
@@ -41,7 +46,14 @@ var timeline = [
 jsPsych.run(timeline);
 ```
 
-The `default_setup()` function sets the task to use the default images (which can be found [here](img/) and seen in [this table](#images) below). This ensures that the `images.list_filenames()` function returns the correct list of filenames for the `jsPsychPreload` plugin.
+By default, `list_filenames` returns the paths to the images [here](img/), which can be seen in [this table](#images) below. These can be substituted by setting various attributes of the `two_step_task.images.filenames` object:
+
+```javascript
+two_step_task.images.filenames['1A'] = 'path/to/my-1A.png'
+two_step_task.images.filenames['reward'] = 'path/to/my-reward.png'
+```
+
+This should be done before the output of `list_filenames` is passed to the `jsPsychPreload` trial.
 
 ## Creating trials
 
@@ -64,7 +76,7 @@ The `default_setup()` function sets the task to use the default images (which ca
 
 These sub-trials can be recombined to modify the task. NB: in the trial timeline produced by `two_step_task.trials.single_trial()`, the trials from `step_1()` to `reward()` are contained within a sub-timeline that can be aborted in case the participant doesn't make a response quickly enough.
 
-`two_step_task.trials.example_instructions()` can be used to create a set of interactive instruction in which participants first become familiar with the second stage, then the first.
+`two_step_task.trials.interactive_instructions()` can be used to create a set of interactive instruction in which participants first become familiar with the second stage, then the first.
 
 ## Data produced
 
@@ -75,9 +87,11 @@ After a trial (including both steps of the task) is complete, the information ab
 | `trial_n` | Trial number |
 | `reward_probs` | Object mapping each terminal state to its associated reward probability. E.g. `{2AA: 0.33, 2AB: 0.27, 2BA: 0.60, 2BB: 0.35}` |
 | `step_1_action` | Action taken during step 1 ( `'1A'` or  `'1B'`). |
+| `step_1_rt` | Reaction time, in ms, during step 1. |
 | `step_2` | The state reached to enter step 2 (`'2A'` or `'2B'`). |
 | `transition` | Specifies whether the step one-to-step two transition was `'common'` or `'rare'`. |
 | `step_2_action` | Action taken during step 2 (`'2AA'`, `'2AB'`, `'2BA'`, or `'2BB'`). |
+| `step_2_rt` | Reaction time, in ms, during step 2. |
 | `reward` | Specifies whether a reward was received (Boolean)
 | `timeout` | Specifies whether the participant took to long to make a response, thus ending the trial early (Boolean) |
 
@@ -116,9 +130,9 @@ Image filenames are attached to a set of attributes of `two_step_task.images.fil
 
 ## Creating custom instructions
 
-As described above, the function `two_step_task.trials.example_instructions()` creates a set of interactive instructions for participants. However, performance on the two-step task is sensitive to instructions, as shown by [Feher da Silva & Hare, 2020](https://doi.org/10.1038/s41562-020-0905-y). If you want to change only the text of the example instructions, you're probably best off simply creating a copy of the [source code](2st.js) of this function in your own code and editing the text there. If you want to customize the interactivity, see below, where I have annotated the source code of the `example_instructions()` function as a guide to creating custom interactive instructions.
+As described above, the function `two_step_task.trials.interactive_instructions()` creates a set of interactive instructions for participants. However, performance on the two-step task is sensitive to instructions, as shown by [Feher da Silva & Hare, 2020](https://doi.org/10.1038/s41562-020-0905-y). If you want to change only the text of the example instructions, you're probably best off simply creating a copy of the [source code](2st.js) of this function in your own code and editing the text there. If you want to customize the interactivity, see below, where I have annotated the source code of the `interactive_instructions()` function as a guide to creating custom interactive instructions.
 
-### `example_instructions()` explained
+### `interactive_instructions()` explained
 
 After an initial introduction to the experiment, the participants will practice only step 2 (opening boxes to immediately either receive rewards or not). The reward probabilities for each action in step 2 are set to known values to introduce participants to the idea that actions will have different values. Moreover, time limits will be eliminated by temporarily setting `two_step_task.interaction.timeout_ms` to `undefined`. The previous value of `timeout_ms` is stored in a persistent variable so that it can be reset later.
 

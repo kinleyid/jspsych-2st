@@ -41,7 +41,7 @@ var two_step_task = {
 			'no_reward':	null,
 			'timeout':		null
 		},
-		data: {
+		data: { // Container for actual Image() objects
 			'1A':			null,
 			'1B':			null,
 			'2AA':			null,
@@ -53,11 +53,10 @@ var two_step_task = {
 			'timeout':		null
 		},
 		set_files_to_default: function() {
-			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.6.0/img/';
-			var img = two_step_task.images.filenames;
-			var k;
-			for (k in img) {
-				img[k] = path + k + '.svg';
+			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.7.0/img/';
+			var img_name;
+			for (img_name in two_step_task.images.filenames) {
+				two_step_task.images.filenames[k] = path + img_name + '.svg';
 			}
 		},
 		list_filenames: function() { // E.g., for preloading
@@ -70,7 +69,7 @@ var two_step_task = {
 			return(file_list);
 		},
 		n_loaded: 0,
-		n_to_load: 9, // Will be set
+		n_to_load: 9,
 		load: function(on_finish) {
 			var k;
 			for (k in two_step_task.images.filenames) {
@@ -389,6 +388,7 @@ var two_step_task = {
 						// Record response
 						var choice_name = two_step_task.interaction.get_choice_name(data.response);
 						two_step_task.data.step_1_action = choice_name;
+						two_step_task.data.step_1_rt = data.rt;
 						// Set up animation
 						two_step_task.animation.prepare(data.response);
 					} else {
@@ -456,6 +456,7 @@ var two_step_task = {
 						// Record response
 						var choice_name = two_step_task.interaction.get_choice_name(data.response);
 						two_step_task.data.step_2_action = choice_name;
+						two_step_task.data.step_2_rt = data.rt;
 						// Set up animation
 						two_step_task.animation.prepare(data.response);
 					} else {
@@ -588,7 +589,7 @@ var two_step_task = {
 			}
 			return(trial);
 		},
-		example_instructions: function() {
+		interactive_instructions: function() {
 			var instr_1 = {
 				type: jsPsychInstructions,
 				pages: [
@@ -703,3 +704,5 @@ var two_step_task = {
 		}
 	}
 }
+
+two_step_task.default_setup();
