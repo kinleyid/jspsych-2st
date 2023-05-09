@@ -21,7 +21,7 @@ First, source the script "2st.js" along with the required jsPsych plugins:
 <script src="https://unpkg.com/@jspsych/plugin-instructions"></script>
 ```
 
-(Note that this code is currently compatible with jsPsych 7+. If you need support for legacy versions of jsPsych, please contact me at kinleyid@mcmaseter.ca)
+(Note that this code is currently compatible with jsPsych 7+. If you need support for legacy versions of jsPsych, please contact me at kinleyid@mcmaster.ca)
 
 Then, a minimal script to run the two-step task with the default parameters as described in [Daw et al. (2011)](https://doi.org/10.1016/j.neuron.2011.02.027) is as follows:
 
