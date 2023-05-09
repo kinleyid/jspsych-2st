@@ -56,7 +56,7 @@ var two_step_task = {
 			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.7.0/img/';
 			var img_name;
 			for (img_name in two_step_task.images.filenames) {
-				two_step_task.images.filenames[k] = path + img_name + '.svg';
+				two_step_task.images.filenames[img_name] = path + img_name + '.svg';
 			}
 		},
 		list_filenames: function() { // E.g., for preloading
