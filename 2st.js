@@ -53,7 +53,7 @@ var two_step_task = {
 			'timeout':		null
 		},
 		set_files_to_default: function() {
-			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v0.7.0/img/';
+			var path = 'https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v1.0.0/img/';
 			var img_name;
 			for (img_name in two_step_task.images.filenames) {
 				two_step_task.images.filenames[img_name] = path + img_name + '.svg';
