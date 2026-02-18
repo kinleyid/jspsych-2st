@@ -403,7 +403,7 @@ var two_step_task = {
 				type: jsPsychCallFunction,
 				func: function() {
 					// Determine transition
-					var choice_name = two_step_task.interaction.get_choice_name();
+					var choice_name = two_step_task.data.step_1_action; // Thanks to Gleb Vzorin, 2026.02.18 //two_step_task.interaction.get_choice_name();
 					var transition = Math.random() < two_step_task.transition.common_prob ? 'common' : 'rare';
 					var step_2 = two_step_task.transition.structure[choice_name][transition];
 					// Record transition
