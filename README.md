@@ -15,7 +15,7 @@ This task (also known as the two-stage task) is meant to measure the contributio
 First, source the script "2st.js" along with the required jsPsych plugins:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v1.0.0/2st.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/kinleyid/jspsych-2st@v1.0.1/2st.js"></script>
 <script src="https://unpkg.com/@jspsych/plugin-call-function"></script>
 <script src="https://unpkg.com/@jspsych/plugin-canvas-keyboard-response"></script>
 <script src="https://unpkg.com/@jspsych/plugin-instructions"></script>
